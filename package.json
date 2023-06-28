@@ -1,22 +1,34 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
-  "private": true,
+  "name": "aulas-crudcomqualidade.io",
+  "version": "1.0.0",
+  "description": "Projeto criando um CRUD com qualidade!",
+  "main": "index.js",
   "scripts": {
+    "start:crud": "npx ts-node ./core/crud.ts",
+    "dev:crud": "nodemon --ext ts,tsx --exec 'npm run start:crud'",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/devsoutinho/aulas-crudcomqualidade.io/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.5",
+    "@types/react": "18.0.29",
+    "@types/uuid": "^9.0.1",
+    "nodemon": "^2.0.21"
   },
   "dependencies": {
-    "@types/node": "20.3.2",
-    "@types/react": "18.2.14",
-    "@types/react-dom": "18.2.6",
-    "eslint": "8.43.0",
-    "eslint-config-next": "13.4.7",
-    "next": "13.4.7",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "typescript": "5.1.5"
+    "next": "^13.2.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.0.2",
+    "uuid": "^9.0.0"
   }
 }
