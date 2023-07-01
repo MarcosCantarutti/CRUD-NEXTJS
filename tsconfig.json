@@ -14,7 +14,11 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "baseUrl": ".",
-    "paths": { "@ui/*": ["src/ui/*"] },
+    "paths": {
+      "@ui/*": ["src/ui/*"],
+      "@db-crud-todo": ["core/crud.ts"],
+      "@server/*": ["src/server/*"]
+    },
     "incremental": true,
     "plugins": [
       {
