@@ -1,20 +1,20 @@
-import fs from "fs";
-import { v4 as uuid } from 'uuid';
-// const fs = require('fs'); -- CommnoJS
-const DB_FILE_PATH = './core/db'; // banco falso
+/* eslint-disable no-console */
+import fs from "fs"; // ES6
+import { v4 as uuid } from "uuid";
+// const fs = require("fs"); - CommonJS
+const DB_FILE_PATH = "./core/db";
 
-// console.log('CRUD');
+// console.log("[CRUD]");
 
 type UUID = string;
 
 interface Todo {
-  id: UUID,
-  date: string,
-  content: string,
-  done: boolean,
+  id: UUID;
+  date: string;
+  content: string;
+  done: boolean;
 }
 
-// CREATE
 export function create(content: string): Todo {
   const todo: Todo = {
     id: uuid(),
@@ -22,79 +22,106 @@ export function create(content: string): Todo {
     content: content,
     done: false,
   };
-  const todos: Array<Todo> = [
-    ...read(),
-    todo,
-  ];
+
+  const todos: Array<Todo> = [...read(), todo];
+
   // salvar o content no sistema
-  fs.writeFileSync(DB_FILE_PATH, JSON.stringify({
-    todos,
-    dogs: [],
-  }, null, 2)); //salvando como json
+  fs.writeFileSync(
+    DB_FILE_PATH,
+    JSON.stringify(
+      {
+        todos,
+        dogs: [],
+      },
+      null,
+      2
+    )
+  );
   return todo;
 }
 
-//READ
 export function read(): Array<Todo> {
   const dbString = fs.readFileSync(DB_FILE_PATH, "utf-8");
   const db = JSON.parse(dbString || "{}");
-
-  if (!db.todos) { // Fail Fast Validations
+  if (!db.todos) {
+    // Fail Fast Validations
     return [];
   }
-  return db.todos
+
+  return db.todos;
 }
 
-//UPDATE
-export function update(id: UUID, partialTodo: Partial<Todo>): Todo { // PARTIAL -> recebendo alguma coisa parcial de Todo
+function update(id: UUID, partialTodo: Partial<Todo>): Todo {
   let updatedTodo;
-
   const todos = read();
-  todos.forEach((currenTodo) => {
-    // console.log(currenTodo)
-    const isToUpdate = currenTodo.id === id;
+  todos.forEach((currentTodo) => {
+    const isToUpdate = currentTodo.id === id;
     if (isToUpdate) {
-      updatedTodo = Object.assign(currenTodo, partialTodo) // recebe um objeto e atribui/muda o seu valor com o segundo argumento
+      updatedTodo = Object.assign(currentTodo, partialTodo);
     }
   });
 
-  fs.writeFileSync(DB_FILE_PATH, JSON.stringify({ todos, }, null, 2))
+  fs.writeFileSync(
+    DB_FILE_PATH,
+    JSON.stringify(
+      {
+        todos,
+      },
+      null,
+      2
+    )
+  );
 
   if (!updatedTodo) {
-    throw new Error('Please, provide another ID!');
+    throw new Error("Please, provide another ID!");
   }
 
   return updatedTodo;
 }
 
-export function updateContentById(id: UUID, content: string): Todo {
-  return update(id, { content })
+function updateContentById(id: UUID, content: string): Todo {
+  return update(id, {
+    content,
+  });
 }
 
-export function deleteById(id: UUID) {
-  const todos = read(); // pegar todas as todos
+function deleteById(id: UUID) {
+  const todos = read();
 
-  const filteredTodos = todos.filter((todo) => {
-    if (todo.id === id) {
+  const todosWithoutOne = todos.filter((todo) => {
+    if (id === todo.id) {
       return false;
     }
     return true;
   });
 
-  fs.writeFileSync(DB_FILE_PATH, JSON.stringify({ todos: filteredTodos, }, null, 2))
-
+  fs.writeFileSync(
+    DB_FILE_PATH,
+    JSON.stringify(
+      {
+        todos: todosWithoutOne,
+      },
+      null,
+      2
+    )
+  );
 }
 
-export function CLEAR_DB() {
+function CLEAR_DB() {
   fs.writeFileSync(DB_FILE_PATH, "");
 }
 
-//simulation
-// CLEAR_DB(); // LIMPAR BD ANTES DE GRAVAR, EVITAR LOOP
-// create('primeira todo!');
-// const segundaTodo = create('segunda todo!');
-// deleteById(segundaTodo.id);
-// const terceiraTodo = create('terceira todo!');
-// // update(terceiraTodo.id, { content: "terceira todo com o novo conteudo", done: true }); multiplas
-// updateContentById(terceiraTodo.id, "terceira todo com o novo conteudo"); // somente uma
-// console.log(read());
+// [SIMULATION]
+// CLEAR_DB();
+// create("Primeira TODO");
+// const secondTodo = create("Segunda TODO");
+// deleteById(secondTodo.id);
+// const thirdTodo = create("Terceira TODO");
+// // update(thirdTodo.id, {
+// //   content: "Atualizada!",
+// //   done: true,
+// // });
+// updateContentById(thirdTodo.id, "Atualizada!")
+// const todos = read();
+// console.log(todos);
+// console.log(todos.length);

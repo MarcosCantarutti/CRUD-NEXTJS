@@ -11,42 +11,22 @@ interface HomeTodo {
 }
 
 function HomePage() {
-  //garantindo o load apenas uma vez das todos
-  // const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
-
-  // use ref initial loading
   const initialLoadComplete = React.useRef(false);
-
-  //total de paginas
+  const [newTodoContent, setNewTodoContent] = React.useState("");
   const [totalPages, setTotalPages] = React.useState(0);
-
-  //paginação
   const [page, setPage] = React.useState(1);
-
-  // valor atual e funcao de alterar o estado de um elemento
-  const [todos, setTodos] = React.useState<HomeTodo[]>([]);
-
-  //Estado de loading
+  const [search, setSearch] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(true);
-
-  // vincular search as todos
-  const [search, setSearch] = React.useState("e");
-
-  // logica do filter no controller
+  const [todos, setTodos] = React.useState<HomeTodo[]>([]);
   const homeTodos = todoController.filterTodosByContent<HomeTodo>(
-    todos,
-    search
+    search,
+    todos
   );
 
   const hasMorePages = totalPages > page;
   const hasNoTodos = homeTodos.length === 0 && !isLoading;
 
-  // setTodos(filteredTodos);
-
-  // React.useEffect(() => {}, []) só carrega uma vez no LOAD
-  // rodar uma unica vez quando o componente carrega
   React.useEffect(() => {
-    // setInitialLoadComplete(true);
     if (!initialLoadComplete.current) {
       todoController
         .get({ page })
@@ -59,7 +39,7 @@ function HomePage() {
           initialLoadComplete.current = true;
         });
     }
-  }, [page]);
+  }, []);
 
   return (
     <main>
@@ -72,8 +52,36 @@ function HomePage() {
         <div className="typewriter">
           <h1>O que fazer hoje?</h1>
         </div>
-        <form>
-          <input type="text" placeholder="Correr, Estudar..." />
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            todoController.create({
+              content: newTodoContent,
+              // .then
+              onSuccess(todo: HomeTodo) {
+                setTodos((oldTodos) => {
+                  return [todo, ...oldTodos];
+                });
+                setNewTodoContent("");
+              },
+              // .catch
+              onError(customMessage) {
+                alert(
+                  customMessage ||
+                    "Você precisa ter um conteúdo para criar uma TODO!"
+                );
+              },
+            });
+          }}
+        >
+          <input
+            type="text"
+            placeholder="Correr, Estudar..."
+            value={newTodoContent}
+            onChange={function newTodoHandler(event) {
+              setNewTodoContent(event.target.value);
+            }}
+          />
           <button type="submit" aria-label="Adicionar novo item">
             +
           </button>
@@ -85,10 +93,10 @@ function HomePage() {
           <input
             type="text"
             placeholder="Filtrar lista atual, ex: Dentista"
+            value={search}
             onChange={function handleSearch(event) {
               setSearch(event.target.value);
             }}
-            value={search}
           />
         </form>
 
@@ -135,6 +143,7 @@ function HomePage() {
                 </td>
               </tr>
             )}
+
             {hasMorePages && (
               <tr>
                 <td colSpan={4} align="center" style={{ textAlign: "center" }}>
@@ -158,7 +167,7 @@ function HomePage() {
                         });
                     }}
                   >
-                    Página {page} Carregar mais{" "}
+                    Página {page}, Carregar mais{" "}
                     <span
                       style={{
                         display: "inline-block",

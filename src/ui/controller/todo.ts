@@ -1,17 +1,22 @@
-import { todoRepository } from '@ui/repository/todo';
+import { todoRepository } from "@ui/repository/todo";
+import { Todo } from "@ui/schema/todo";
+import { z as schema } from "zod";
 
 interface TodoControllerGetParams {
   page: number;
 }
-
-async function get({ page }: TodoControllerGetParams) {
+async function get(params: TodoControllerGetParams) {
+  // Fazer a lógica de pegar os dados
   return todoRepository.get({
-    page: page || 1, // pagina ou pagina 1
-    limit: 1
+    page: params.page,
+    limit: 2,
   });
 }
 
-function filterTodosByContent<Todo>(todos: Array<Todo & { content: string }>, search: string): Array<Todo> {
+function filterTodosByContent<Todo>(
+  search: string,
+  todos: Array<Todo & { content: string }>
+): Array<Todo> {
   const homeTodos = todos.filter((todo) => {
     const searchNormalized = search.toLowerCase();
     const contentNormalized = todo.content.toLowerCase();
@@ -20,7 +25,32 @@ function filterTodosByContent<Todo>(todos: Array<Todo & { content: string }>, se
 
   return homeTodos;
 }
+
+interface TodoControllerCreateParams {
+  content?: string;
+  onError: (customMessage?: string) => void;
+  onSuccess: (todo: Todo) => void;
+}
+function create({ content, onSuccess, onError }: TodoControllerCreateParams) {
+  // Fail Fast
+  const parsedParams = schema.string().nonempty().safeParse(content);
+  if (!parsedParams.success) {
+    onError();
+    return;
+  }
+
+  todoRepository
+    .createByContent(parsedParams.data)
+    .then((newTodo) => {
+      onSuccess(newTodo);
+    })
+    .catch(() => {
+      onError();
+    });
+}
+
 export const todoController = {
   get,
   filterTodosByContent,
-}
+  create,
+};
