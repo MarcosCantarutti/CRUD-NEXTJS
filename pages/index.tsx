@@ -11,6 +11,12 @@ interface HomeTodo {
 }
 
 function HomePage() {
+  //garantindo o load apenas uma vez das todos
+  // const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
+
+  // use ref initial loading
+  const initialLoadComplete = React.useRef(false);
+
   //total de paginas
   const [totalPages, setTotalPages] = React.useState(0);
 
@@ -20,16 +26,39 @@ function HomePage() {
   // valor atual e funcao de alterar o estado de um elemento
   const [todos, setTodos] = React.useState<HomeTodo[]>([]);
 
-  const hasMorePages = totalPages > page;
+  //Estado de loading
+  const [isLoading, setIsLoading] = React.useState(true);
 
+  // vincular search as todos
+  const [search, setSearch] = React.useState("e");
+
+  // logica do filter no controller
+  const homeTodos = todoController.filterTodosByContent<HomeTodo>(
+    todos,
+    search
+  );
+
+  const hasMorePages = totalPages > page;
+  const hasNoTodos = homeTodos.length === 0 && !isLoading;
+
+  // setTodos(filteredTodos);
+
+  // React.useEffect(() => {}, []) só carrega uma vez no LOAD
   // rodar uma unica vez quando o componente carrega
   React.useEffect(() => {
-    todoController.get({ page }).then(({ todos, pages }) => {
-      setTodos((oldTodos) => {
-        return [...todos, ...oldTodos];
-      });
-      setTotalPages(pages);
-    });
+    // setInitialLoadComplete(true);
+    if (!initialLoadComplete.current) {
+      todoController
+        .get({ page })
+        .then(({ todos, pages }) => {
+          setTodos(todos);
+          setTotalPages(pages);
+        })
+        .finally(() => {
+          setIsLoading(false);
+          initialLoadComplete.current = true;
+        });
+    }
   }, [page]);
 
   return (
@@ -53,7 +82,14 @@ function HomePage() {
 
       <section>
         <form>
-          <input type="text" placeholder="Filtrar lista atual, ex: Dentista" />
+          <input
+            type="text"
+            placeholder="Filtrar lista atual, ex: Dentista"
+            onChange={function handleSearch(event) {
+              setSearch(event.target.value);
+            }}
+            value={search}
+          />
         </form>
 
         <table border={1}>
@@ -69,7 +105,7 @@ function HomePage() {
           </thead>
 
           <tbody>
-            {todos.map((todo) => {
+            {homeTodos.map((todo) => {
               return (
                 <tr key={todo.id}>
                   <td>
@@ -84,23 +120,43 @@ function HomePage() {
               );
             })}
 
-            <tr>
-              <td colSpan={4} align="center" style={{ textAlign: "center" }}>
-                Carregando...
-              </td>
-            </tr>
+            {isLoading && (
+              <tr>
+                <td colSpan={4} align="center" style={{ textAlign: "center" }}>
+                  Carregando...
+                </td>
+              </tr>
+            )}
 
-            <tr>
-              <td colSpan={4} align="center">
-                Nenhum item encontrado
-              </td>
-            </tr>
+            {hasNoTodos && (
+              <tr>
+                <td colSpan={4} align="center">
+                  Nenhum item encontrado
+                </td>
+              </tr>
+            )}
             {hasMorePages && (
               <tr>
                 <td colSpan={4} align="center" style={{ textAlign: "center" }}>
                   <button
                     data-type="load-more"
-                    onClick={() => setPage(page + 1)}
+                    onClick={() => {
+                      setIsLoading(true);
+                      const nextPage = page + 1;
+                      setPage(nextPage);
+
+                      todoController
+                        .get({ page: nextPage })
+                        .then(({ todos, pages }) => {
+                          setTodos((oldTodos) => {
+                            return [...oldTodos, ...todos];
+                          });
+                          setTotalPages(pages);
+                        })
+                        .finally(() => {
+                          setIsLoading(false);
+                        });
+                    }}
                   >
                     Página {page} Carregar mais{" "}
                     <span
